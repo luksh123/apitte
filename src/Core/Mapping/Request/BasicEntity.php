@@ -11,7 +11,6 @@ use TypeError;
 
 abstract class BasicEntity extends AbstractEntity
 {
-
 	use TReflectionProperties;
 
 	/**
@@ -27,6 +26,7 @@ abstract class BasicEntity extends AbstractEntity
 	 */
 	public function fromRequest(ApiRequest $request): ?IRequestEntity
 	{
+		
 		if (in_array($request->getMethod(), [Endpoint::METHOD_POST, Endpoint::METHOD_PUT, Endpoint::METHOD_PATCH], true)) {
 			return $this->fromBodyRequest($request);
 		}
@@ -81,10 +81,29 @@ abstract class BasicEntity extends AbstractEntity
 	 */
 	protected function fromBodyRequest(ApiRequest $request): self
 	{
-		try {
-			$body = (array) $request->getJsonBodyCopy(true);
-		} catch (JsonException $ex) {
-			throw new ClientErrorException('Invalid json data', 400, $ex);
+		$endpoint = $request->getOriginalRequest()->getAttribute('apitte.core.endpoint');
+		$requestBody = $endpoint ? $endpoint->getRequestBody() : null;
+
+		$requestContentType = $request->getHeader('content-type');
+		$requestContentType = $requestContentType[0] ?? null;
+
+		if ($requestBody && $requestContentType && $requestBody->getContentType() !== $requestContentType)
+			throw new ClientErrorException('Different content type detected', 400);
+
+		$body = [];
+		
+		if ($requestContentType === 'application/x-www-form-urlencoded') {
+			$body = $request->getParsedBody();
+			$request->getBody()->rewind();
+
+		}
+
+		if ($requestContentType === 'application/json') {
+			try {
+				$body = (array) $request->getJsonBodyCopy(true);
+			} catch (JsonException $ex) {
+				throw new ClientErrorException('Invalid json data', 400, $ex);
+			}
 		}
 
 		return $this->factory($body);

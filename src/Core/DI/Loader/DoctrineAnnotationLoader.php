@@ -271,6 +271,7 @@ class DoctrineAnnotationLoader extends AbstractContainerLoader
 					$requestBody->setEntity($annotation->getEntity());
 					$requestBody->setRequired($annotation->isRequired());
 					$requestBody->setValidation($annotation->isValidation());
+					$requestBody->setContentType($annotation->getContentType());
 					$schemaMethod->setRequestBody($requestBody);
 
 					continue;

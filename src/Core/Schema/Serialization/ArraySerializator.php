@@ -236,6 +236,7 @@ class ArraySerializator implements ISerializator
 			'required' => $requestBody->isRequired(),
 			'validation' => $requestBody->isValidation(),
 			'entity' => $requestBody->getEntity(),
+			'contentType' => $requestBody->getContentType(),
 		];
 	}
 

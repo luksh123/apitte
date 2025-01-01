@@ -10,4 +10,9 @@ interface IEntityAdapter
 	 */
 	public function getMetadata(string $type): array;
 
+	/**
+	 * @return mixed[]
+	 */
+	public function getMetadataWithComponents(string $type): array;
+
 }

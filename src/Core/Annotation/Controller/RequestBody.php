@@ -19,16 +19,19 @@ class RequestBody
 
 	private ?string $entity;
 
+	private string $contentType;
+
 	private bool $required;
 
 	private bool $validation;
 
-	public function __construct(?string $description = null, ?string $entity = null, bool $required = false, bool $validation = true)
+	public function __construct(?string $description = null, ?string $entity = null, bool $required = false, bool $validation = true, string $contentType = 'application/json')
 	{
 		$this->description = $description;
 		$this->entity = $entity;
 		$this->required = $required;
 		$this->validation = $validation;
+		$this->contentType = $contentType;
 	}
 
 	public function getEntity(): ?string
@@ -39,6 +42,11 @@ class RequestBody
 	public function getDescription(): ?string
 	{
 		return $this->description;
+	}
+
+	public function getContentType(): string
+	{
+		return $this->contentType;
 	}
 
 	public function isRequired(): bool

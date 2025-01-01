@@ -99,6 +99,7 @@ class NeonLoader implements ILoader
 		$requestBody->setDescription($requestBodySettings['description'] ?? null);
 		$requestBody->setEntity($requestBodySettings['entity'] ?? null);
 		$requestBody->setValidation($requestBodySettings['validation'] ?? true);
+		$requestBody->setContentType($requestBodySettings['contentType'] ?? true);
 
 		$method->setRequestBody($requestBody);
 	}

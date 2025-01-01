@@ -17,6 +17,8 @@ class CoreDefinition implements IDefinition
 
 	private IEntityAdapter $entityAdapter;
 
+	private array $schemasComponents = [];
+
 	public function __construct(ApiSchema $schema, IEntityAdapter $entityAdapter)
 	{
 		$this->schema = $schema;
@@ -33,9 +35,14 @@ class CoreDefinition implements IDefinition
 			foreach ($endpoint->getMethods() as $method) {
 				$data['paths'][(string) $endpoint->getMask()][strtolower($method)] = $this->createOperation($endpoint);
 			}
+			if (!empty($this->components))
 
 			$data = Helpers::merge($endpoint->getOpenApi()['controller'] ?? [], $data);
 		}
+
+		$data['components'] = ['schemas' => $this->schemasComponents];
+
+		$data = Helpers::merge($endpoint->getOpenApi()['controller'] ?? [], $data);
 
 		return $data;
 	}
@@ -90,12 +97,18 @@ class CoreDefinition implements IDefinition
 		}
 
 		$entity = $requestBody->getEntity();
+		
 		if ($entity !== null) {
+			$entityName = preg_replace('/\W/','',ucwords($entity));
+			$metadata = $this->entityAdapter->getMetadataWithComponents($entity);
+			$this->schemasComponents[$entityName] = $metadata['schema'];
+			$this->schemasComponents = array_merge($this->schemasComponents, $metadata['components']);
+
 			$requestBodyData['content'] = [
 				// TODO resolve content types
-				'application/json' =>
+				$requestBody->getContentType() =>
 					[
-						'schema' => $this->entityAdapter->getMetadata($entity),
+						'schema' => ['$ref' => '#/components/schemas/'.$entityName]
 					],
 			];
 		}
@@ -121,17 +134,22 @@ class CoreDefinition implements IDefinition
 	 */
 	protected function createResponse(EndpointResponse $response): array
 	{
+
 		$responseData = [
 			'description' => $response->getDescription(),
 		];
 
 		$entity = $response->getEntity();
 		if ($entity !== null) {
+			$entityName = preg_replace('/\W/','',ucwords($entity));
+			$metadata = $this->entityAdapter->getMetadataWithComponents($entity);
+			$this->schemasComponents[$entityName] = $metadata['schema'];
+			$this->schemasComponents = array_merge($this->schemasComponents, $metadata['components']);
 			$responseData['content'] = [
 				// TODO resolve content types
 				'application/json' =>
 					[
-						'schema' => $this->entityAdapter->getMetadata($entity),
+						'schema' =>  ['$ref' => '#/components/schemas/'.$entityName],
 					],
 			];
 		}

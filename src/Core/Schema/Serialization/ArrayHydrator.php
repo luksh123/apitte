@@ -87,6 +87,7 @@ class ArrayHydrator implements IHydrator
 			$request->setEntity($requestData['entity']);
 			$request->setRequired($requestData['required']);
 			$request->setValidation($requestData['validation']);
+			$request->setContentType($requestData['contentType']);
 
 			$endpoint->setRequestBody($request);
 		}

@@ -9,6 +9,8 @@ class EndpointRequestBody
 
 	private ?string $entity = null;
 
+	private ?string $contentType = 'application/json';
+
 	private bool $required = false;
 
 	private bool $validation = true;
@@ -31,6 +33,16 @@ class EndpointRequestBody
 	public function setEntity(?string $entity): void
 	{
 		$this->entity = $entity;
+	}
+
+	public function getContentType(): ?string
+	{
+		return $this->contentType;
+	}
+
+	public function setContentType(?string $contentType): void
+	{
+		$this->contentType = $contentType;
 	}
 
 	public function isRequired(): bool

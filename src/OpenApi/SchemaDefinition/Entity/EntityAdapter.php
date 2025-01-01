@@ -18,6 +18,17 @@ use RuntimeException;
 class EntityAdapter implements IEntityAdapter
 {
 
+	protected array $schemasComponents = [];
+
+	public function getMetadataWithComponents(string $type): array
+	{
+		return [
+			'schema' => $this->getMetadata($type),
+			'components' => $this->schemasComponents
+		];
+
+	}
+
 	/**
 	 * @return mixed[]
 	 */
@@ -70,16 +81,28 @@ class EntityAdapter implements IEntityAdapter
 			$metadata[$schemaCombination] = $resolvedTypes;
 
 			return $metadata;
+
 		}
 
 		// Get schema for array
 		if (str_ends_with($type, '[]')) {
 			$subType = Strings::replace($type, '#\\[\\]#', '');
+			
+			if (class_exists($subType) && !is_subclass_of($subType, DateTimeInterface::class)) {
+				$subTypeName = preg_replace('/\W/','',ucwords($subType));
+				$this->schemasComponents[$subTypeName] =  $this->getMetadata($subType);
+				return [
+					'type' => 'array',
+					'items' => ['$ref' => '#/components/schemas/'.$subTypeName],
+				];
+				
+			}
 
 			return [
 				'type' => 'array',
 				'items' => $this->getMetadata($subType),
 			];
+			
 		}
 
 		// Array shape
@@ -148,10 +171,21 @@ class EntityAdapter implements IEntityAdapter
 				$propertyType = 'object';
 			}
 
+			if (class_exists($propertyType) && !is_subclass_of($propertyType, DateTimeInterface::class)) {
+				$propertyTypeName = preg_replace('/\W/','',ucwords($propertyType));
+				$this->schemasComponents[$propertyTypeName] = $this->getMetadata($propertyType);
+
+				$data[$property->getName()] = ['$ref' => '#/components/schemas/'.$propertyTypeName];
+				
+				continue;
+			}
+			
 			$data[$property->getName()] = $this->getMetadata($propertyType);
+			
 		}
 
 		return $data;
+
 	}
 
 	/**
@@ -249,7 +283,9 @@ class EntityAdapter implements IEntityAdapter
 			throw new InvalidStateException('You have to enable phpDoc comments in opcode cache.');
 		}
 
+
 		$re = '#[\s*]@' . preg_quote($name, '#') . '(?=\s|$)(?:[ \t]+([^@\s]\S*))?#';
+
 		if ($ref->getDocComment() && preg_match($re, trim($ref->getDocComment(), '/*'), $m)) {
 			return $m[1] ?? null;
 		}
