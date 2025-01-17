@@ -107,6 +107,7 @@ abstract class BasicEntity extends AbstractEntity
 		}
 
 		return $this->factory($body);
+
 	}
 
 	/**
