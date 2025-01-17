@@ -66,6 +66,7 @@ class UsersController extends BaseV1Controller
 - `required=true|false` - required by default, but you could make parameter optional
 - `deprecated=true|false` - used in [openapi](schema.md#openapi) schema
 - `allowEmpty=true|false` - make parameter nullable
+- `enum={"only", "these", "values"}` - allowable values
 
 ### Data types
 
@@ -105,6 +106,7 @@ api:
                 float: Apitte\Core\Mapping\Parameter\FloatTypeMapper
                 bool: Apitte\Core\Mapping\Parameter\BooleanTypeMapper
                 datetime: Apitte\Core\Mapping\Parameter\DateTimeTypeMapper
+                enum: Apitte\Core\Mapping\Parameter\EnumTypeMapper
 ```
 
 ### Custom datatypes
@@ -248,6 +250,7 @@ services:
             - setConstraintValidatorFactory(Contributte\Validator\ContainerConstraintValidatorFactory())
             - setTranslator(@Contributte\Translation\Translator)
             - setTranslationDomain('validators')
+            - setGroups(['input'])
 api:
     plugins:
         Apitte\Core\DI\Plugin\CoreMappingPlugin:
