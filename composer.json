@@ -1,5 +1,5 @@
 {
-  "name": "contributte/apitte",
+  "name": "luksh123/apitte",
   "description": "An opinionated and enjoyable API framework based on Nette Framework. Supporting content negotiation, debugging, middlewares, attributes, annotations and loving openapi/swagger.",
   "keywords": [
     "api",

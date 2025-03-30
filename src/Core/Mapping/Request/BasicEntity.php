@@ -11,6 +11,7 @@ use TypeError;
 
 abstract class BasicEntity extends AbstractEntity
 {
+
 	use TReflectionProperties;
 
 	/**
