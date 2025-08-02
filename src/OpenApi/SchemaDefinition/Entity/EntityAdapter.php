@@ -106,7 +106,9 @@ class EntityAdapter implements IEntityAdapter
 		}
 
 		// Array shape
-		if (preg_match('~array<(\w+),\s?([^>]+)>~', $type, $m)) {
+		if (preg_match('~array<(\w+),\s?([\w\<\>\[\]]+)>~', $type, $m)) {
+			$metadata = $m[2];
+
 			return [
 				'type' => 'object',
 				'additionalProperties' => $this->getMetadata($m[2]),
