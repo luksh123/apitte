@@ -13,16 +13,13 @@ use Contributte\OpenApi\Utils\Helpers;
 class CoreDefinition implements IDefinition
 {
 
-	protected ApiSchema $schema;
-
-	private IEntityAdapter $entityAdapter;
-
 	private array $schemasComponents = [];
 
-	public function __construct(ApiSchema $schema, IEntityAdapter $entityAdapter)
+	public function __construct(
+		protected ApiSchema $schema,
+		private readonly IEntityAdapter $entityAdapter,
+	)
 	{
-		$this->schema = $schema;
-		$this->entityAdapter = $entityAdapter;
 	}
 
 	/**
@@ -31,13 +28,13 @@ class CoreDefinition implements IDefinition
 	public function load(): array
 	{
 		$data = ['paths' => []];
+
 		foreach ($this->getEndpoints() as $endpoint) {
 			foreach ($endpoint->getMethods() as $method) {
 				$data['paths'][(string) $endpoint->getMask()][strtolower($method)] = $this->createOperation($endpoint);
 			}
 			if (!empty($this->components))
-
-			$data = Helpers::merge($endpoint->getOpenApi()['controller'] ?? [], $data);
+				$data = Helpers::merge($endpoint->getOpenApi()['controller'] ?? [], $data);
 		}
 
 		$data['components'] = ['schemas' => $this->schemasComponents];
@@ -56,6 +53,7 @@ class CoreDefinition implements IDefinition
 
 		// Tags
 		$tags = $this->getOperationTags($endpoint);
+
 		if ($tags !== []) {
 			$operation['tags'] = array_keys($tags);
 		}
@@ -66,6 +64,7 @@ class CoreDefinition implements IDefinition
 		}
 
 		$requestBody = $endpoint->getRequestBody();
+
 		if ($requestBody !== null) {
 			$operation['requestBody'] = $this->createRequestBody($requestBody);
 		}
@@ -75,9 +74,7 @@ class CoreDefinition implements IDefinition
 		// TODO deprecated
 		// $operation->setDeprecated(false);
 
-		$operation = Helpers::merge($endpoint->getOpenApi()['method'] ?? [], $operation);
-
-		return $operation;
+		return Helpers::merge($endpoint->getOpenApi()['method'] ?? [], $operation);
 	}
 
 	/**
@@ -92,6 +89,7 @@ class CoreDefinition implements IDefinition
 		}
 
 		$description = $requestBody->getDescription();
+
 		if ($description !== null) {
 			$requestBodyData['description'] = $description;
 		}
@@ -122,6 +120,7 @@ class CoreDefinition implements IDefinition
 	protected function createResponses(Endpoint $endpoint): array
 	{
 		$responses = [];
+
 		foreach ($endpoint->getResponses() as $response) {
 			$responses[$response->getCode()] = $this->createResponse($response);
 		}
@@ -134,12 +133,12 @@ class CoreDefinition implements IDefinition
 	 */
 	protected function createResponse(EndpointResponse $response): array
 	{
-
 		$responseData = [
 			'description' => $response->getDescription(),
 		];
 
 		$entity = $response->getEntity();
+
 		if ($entity !== null) {
 			$entityName = preg_replace('/\W/','',ucwords($entity));
 			$metadata = $this->entityAdapter->getMetadataWithComponents($entity);
@@ -168,6 +167,7 @@ class CoreDefinition implements IDefinition
 		];
 
 		$parameterDescription = $endpointParameter->getDescription();
+
 		if ($parameterDescription !== null) {
 			$parameter['description'] = $parameterDescription;
 		}

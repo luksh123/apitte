@@ -47,6 +47,10 @@ class EntityAdapter implements IEntityAdapter
 		if ($usesUnionType || $usesIntersectionType) {
 			$types = preg_split('#([&|])#', $type, -1, PREG_SPLIT_NO_EMPTY);
 
+			if ($types === false) {
+				throw new RuntimeException('Could not parse type ' . $type);
+			}
+
 			// Filter out duplicate definitions
 			$types = array_map(fn (string $type): string => $this->normalizeType($type), $types);
 			$types = array_unique($types);
@@ -66,6 +70,7 @@ class EntityAdapter implements IEntityAdapter
 			}
 
 			$resolvedTypes = [];
+
 			foreach ($types as $subType) {
 				$resolvedTypes[] = $this->getMetadata($subType);
 			}
@@ -106,6 +111,7 @@ class EntityAdapter implements IEntityAdapter
 		}
 
 		// Array shape
+		/*if (preg_match('~array<(\w+),\s?([^>]+)>~', $type, $m)) {*/
 		if (preg_match('~array<(\w+),\s?([\w\<\>\[\]]+)>~', $type, $m)) {
 			$metadata = $m[2];
 
@@ -168,7 +174,7 @@ class EntityAdapter implements IEntityAdapter
 		foreach ($properties as $property) {
 			$propertyType = $this->getPropertyType($property) ?? 'string';
 
-			// Self-reference not supported
+			// Self-reference isn't supported
 			if ($propertyType === $type) {
 				$propertyType = 'object';
 			}
@@ -231,8 +237,10 @@ class EntityAdapter implements IEntityAdapter
 	private function getPropertyType(ReflectionProperty $property): ?string
 	{
 		$nativeType = null;
-		if (PHP_VERSION_ID >= 70400 && ($type = Type::fromReflection($property)) !== null) {
+
+		if (($type = Type::fromReflection($property)) !== null) {
 			$nativeType = $this->getNativePropertyType($type, $property);
+
 			// If type is array/mixed or union/intersection of it, try to get more information from annotations
 			if (!preg_match('#[|&]?(array|mixed)[|&]?#', $nativeType)) {
 				return $nativeType;
@@ -277,14 +285,13 @@ class EntityAdapter implements IEntityAdapter
 	}
 
 	/**
-	 * @param ReflectionClass|ReflectionClassConstant|ReflectionProperty|ReflectionFunctionAbstract $ref
+	 * @param ReflectionClass<object>|ReflectionClassConstant|ReflectionProperty|ReflectionFunctionAbstract $ref
 	 */
 	private function parseAnnotation(Reflector $ref, string $name): ?string
 	{
 		if (!Reflection::areCommentsAvailable()) {
 			throw new InvalidStateException('You have to enable phpDoc comments in opcode cache.');
 		}
-
 
 		$re = '#[\s*]@' . preg_quote($name, '#') . '(?=\s|$)(?:[ \t]+([^@\s]\S*))?#';
 
@@ -297,11 +304,11 @@ class EntityAdapter implements IEntityAdapter
 
 	private function getNativePropertyType(Type $type, ReflectionProperty $property): string
 	{
-		if ($type->isSingle() && count($type->getNames()) === 1) {
+		if ($type->isSimple() && count($type->getNames()) === 1) {
 			return $type->getNames()[0];
 		}
 
-		if ($type->isUnion() || ($type->isSingle() && count($type->getNames()) === 2) // nullable type is single but returns name of type and null in names
+		if ($type->isUnion() || ($type->isSimple() && count($type->getNames()) === 2) // nullable type is single but returns name of type and null in names
 		) {
 			return implode('|', $type->getNames());
 		}

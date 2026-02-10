@@ -24,10 +24,11 @@ class BasicValidator implements IEntityValidator
 		$violations = $this->validateProperties($entity);
 
 		if ($violations !== []) {
-			$fields = [];
-			foreach ($violations as $property => $messages) {
-				$fields[$property] = count($messages) > 1 ? $messages : $messages[0];
-			}
+
+			$fields = array_map(
+				static fn ($messages) => count($messages) > 1 ? $messages : $messages[0],
+				$violations,
+			);
 
 			throw ValidationException::create()
 				->withFields($fields);
@@ -35,6 +36,7 @@ class BasicValidator implements IEntityValidator
 	}
 
 	/**
+	 * @param BasicEntity<int|string, mixed> $entity
 	 * @return string[][]
 	 */
 	protected function validateProperties(BasicEntity $entity): array
@@ -47,8 +49,22 @@ class BasicValidator implements IEntityValidator
 			$propertyRf = $rf->getProperty($propertyName);
 			$doc = (string) $propertyRf->getDocComment();
 
-			if (str_contains($doc, '@required') && $entity->{$propertyName} === null) {
-				$violations[$propertyName][] = 'This value should not be null.';
+			if (str_contains($doc, '@required')) {
+				$wasAccessible = $propertyRf->isPublic();
+
+				if (!$wasAccessible) {
+					$propertyRf->setAccessible(true);
+				}
+
+				$value = $propertyRf->getValue($entity);
+
+				if (!$wasAccessible) {
+					$propertyRf->setAccessible(false);
+				}
+
+				if ($value === null) {
+					$violations[$propertyName][] = 'This value should not be null.';
+				}
 			}
 		}
 

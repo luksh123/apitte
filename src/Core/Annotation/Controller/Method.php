@@ -3,21 +3,14 @@
 namespace Apitte\Core\Annotation\Controller;
 
 use Attribute;
-use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
-use Doctrine\Common\Annotations\Annotation\Target;
-use Doctrine\Common\Annotations\AnnotationException;
+use InvalidArgumentException;
 
-/**
- * @Annotation
- * @Target("METHOD")
- * @NamedArgumentConstructor()
- */
 #[Attribute(Attribute::TARGET_METHOD)]
 class Method
 {
 
 	/** @var string[] */
-	private array $methods = [];
+	private readonly array $methods;
 
 	/**
 	 * @param string[]|string $methods
@@ -25,11 +18,11 @@ class Method
 	public function __construct(array|string $methods)
 	{
 		if (empty($methods)) {
-			throw new AnnotationException('Empty @Method given');
+			throw new InvalidArgumentException('Empty #[Method] given');
 		}
 
 		// Wrap single given method into array
-		if (! is_array($methods)) {
+		if (!is_array($methods)) {
 			$methods = [$methods];
 		}
 

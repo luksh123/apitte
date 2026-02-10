@@ -3,17 +3,12 @@
 namespace Apitte\Core\Mapping\Validator;
 
 use Apitte\Core\Exception\Api\ValidationException;
-use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\Reader;
 use Symfony\Component\Validator\ConstraintValidatorFactoryInterface;
-use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validation;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class SymfonyValidator implements IEntityValidator
 {
-
-	private ?Reader $reader;
 
 	private ?ConstraintValidatorFactoryInterface $constraintValidatorFactory = null;
 
@@ -21,13 +16,8 @@ class SymfonyValidator implements IEntityValidator
 
 	private ?string $translationDomain = null;
 
+	/** @var list<string>|null */
 	private ?array $groups = null;
-
-	public function __construct(?Reader $reader = null)
-	{
-		$this->reader = $reader;
-		AnnotationReader::addGlobalIgnoredName('mapping');
-	}
 
 	public function setConstraintValidatorFactory(ConstraintValidatorFactoryInterface $constraintValidatorFactory): void
 	{
@@ -44,6 +34,9 @@ class SymfonyValidator implements IEntityValidator
 		$this->translationDomain = $translationDomain;
 	}
 
+	/**
+	 * @param list<string> $groups
+	 */
 	public function setGroups(array $groups): void
 	{
 		$this->groups = $groups;
@@ -58,10 +51,6 @@ class SymfonyValidator implements IEntityValidator
 		$validatorBuilder = Validation::createValidatorBuilder();
 		$validatorBuilder->enableAttributeMapping();
 
-		if (method_exists($validatorBuilder, 'setDoctrineAnnotationReader')) {
-			$validatorBuilder->setDoctrineAnnotationReader($this->reader);
-		}
-
 		if ($this->constraintValidatorFactory !== null) {
 			$validatorBuilder->setConstraintValidatorFactory($this->constraintValidatorFactory);
 		}
@@ -73,11 +62,11 @@ class SymfonyValidator implements IEntityValidator
 
 		$validator = $validatorBuilder->getValidator();
 
-		/** @var ConstraintViolationListInterface $violations */
 		$violations = $validator->validate($entity, null, $this->groups);
 
 		if (count($violations) > 0) {
 			$fields = [];
+
 			foreach ($violations as $violation) {
 				$fields[$violation->getPropertyPath()][] = $violation->getMessage();
 			}

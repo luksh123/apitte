@@ -11,15 +11,13 @@ use Apitte\Core\Utils\Regex;
 class RequestParameterValidation implements IValidation
 {
 
-	/** @var array<string> */
-	private array $allowedTypes;
-
 	/**
 	 * @param array<string> $allowedTypes
 	 */
-	public function __construct(array $allowedTypes = EndpointParameter::TYPES)
+	public function __construct(
+		private readonly array $allowedTypes = EndpointParameter::TYPES,
+	)
 	{
-		$this->allowedTypes = $allowedTypes;
 	}
 
 	public function validate(SchemaBuilder $builder): void
@@ -113,7 +111,7 @@ class RequestParameterValidation implements IValidation
 					}
 
 					throw new InvalidSchemaException(sprintf(
-						'Mask parameter "%s" is not defined as @RequestParameter(in=path) in "%s"',
+						'Mask parameter "%s" is not defined as #[RequestParameter(in=path)] in "%s"',
 						$maskParameter['name'],
 						$controller->getClass()
 					));

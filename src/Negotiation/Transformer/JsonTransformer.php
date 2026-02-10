@@ -49,10 +49,10 @@ class JsonTransformer extends AbstractTransformer
 	{
 		$data = [
 			'exception' => $exception->getMessage(),
-			'code'=> $exception->getCode(),
 		];
 
 		$context = $exception->getContext();
+
 		if ($context !== null) {
 			$data['context'] = $context;
 		}

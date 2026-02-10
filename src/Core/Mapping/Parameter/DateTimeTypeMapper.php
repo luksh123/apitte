@@ -5,15 +5,19 @@ namespace Apitte\Core\Mapping\Parameter;
 use Apitte\Core\Exception\Runtime\InvalidArgumentTypeException;
 use DateTimeImmutable;
 use TypeError;
+use ValueError;
 
 class DateTimeTypeMapper implements ITypeMapper
 {
 
-	public function normalize(mixed $value): ?DateTimeImmutable
+	/**
+	 * @inheritDoc
+	 */
+	public function normalize(mixed $value, array $options = []): ?DateTimeImmutable
 	{
 		try {
 			$value = DateTimeImmutable::createFromFormat(DATE_ATOM, $value);
-		} catch (TypeError $e) {
+		} catch (ValueError | TypeError) {
 			throw new InvalidArgumentTypeException(InvalidArgumentTypeException::TYPE_DATETIME);
 		}
 

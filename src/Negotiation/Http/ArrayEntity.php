@@ -8,13 +8,14 @@ use IteratorAggregate;
 
 /**
  * @template TKey of string|int
- * @implements IteratorAggregate<TKey, mixed>
+ * @template TValue of mixed
+ * @implements IteratorAggregate<TKey, TValue>
  */
 class ArrayEntity extends AbstractEntity implements IteratorAggregate, Countable
 {
 
 	/**
-	 * @param mixed[] $data
+	 * @param array<TKey, TValue> $data
 	 */
 	public function __construct(array $data)
 	{
@@ -22,16 +23,16 @@ class ArrayEntity extends AbstractEntity implements IteratorAggregate, Countable
 	}
 
 	/**
-	 * @param mixed[] $data
-	 * @return static
+	 * @param array<TKey, TValue> $data
+	 * @return static<TKey, TValue>
 	 */
-	public static function from(array $data): self
+	public static function from(array $data): static
 	{
 		return new static($data);
 	}
 
 	/**
-	 * @return mixed[]
+	 * @return array<TKey, TValue>
 	 */
 	public function toArray(): array
 	{
@@ -39,7 +40,7 @@ class ArrayEntity extends AbstractEntity implements IteratorAggregate, Countable
 	}
 
 	/**
-	 * @return ArrayIterator<TKey, mixed>
+	 * @return ArrayIterator<TKey, TValue>
 	 */
 	public function getIterator(): ArrayIterator
 	{

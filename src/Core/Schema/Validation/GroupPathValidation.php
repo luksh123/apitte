@@ -24,21 +24,21 @@ class GroupPathValidation implements IValidation
 				if ($groupPath === '/') {
 					// INVALID: nonsense
 					throw new InvalidSchemaException(
-						sprintf('@Path "%s" in "%s" cannot be only "/", it is nonsense.', $groupPath, $controller->getClass())
+						sprintf('#[Path] "%s" in "%s" cannot be only "/", it is nonsense.', $groupPath, $controller->getClass())
 					);
 				}
 
 				// MUST: Starts with slash (/)
-				if (substr($groupPath, 0, 1) !== '/') {
+				if (!str_starts_with($groupPath, '/')) {
 					throw new InvalidSchemaException(
-						sprintf('@Path "%s" in "%s" must starts with "/" (slash).', $groupPath, $controller->getClass())
+						sprintf('#[Path] "%s" in "%s" must starts with "/" (slash).', $groupPath, $controller->getClass())
 					);
 				}
 
 				// MUST NOT: Ends with slash (/)
-				if (substr($groupPath, -1, 1) === '/') {
+				if (str_ends_with($groupPath, '/')) {
 					throw new InvalidSchemaException(
-						sprintf('@Path "%s" in "%s" must not ends with "/" (slash).', $groupPath, $controller->getClass())
+						sprintf('#[Path] "%s" in "%s" must not ends with "/" (slash).', $groupPath, $controller->getClass())
 					);
 				}
 			}
@@ -63,7 +63,7 @@ class GroupPathValidation implements IValidation
 				if ($match !== null) {
 					throw new InvalidSchemaException(
 						sprintf(
-							'@Path "%s" in "%s" contains illegal characters "%s". Allowed characters are only [a-zA-Z0-9-_/{}].',
+							'#[Path] "%s" in "%s" contains illegal characters "%s". Allowed characters are only [a-zA-Z0-9-_/{}].',
 							$path,
 							$controller->getClass(),
 							$match[1]
@@ -78,6 +78,7 @@ class GroupPathValidation implements IValidation
 				// -> -_
 				// @regex https://regex101.com/r/APckUJ/3
 				$matches = Regex::matchAll($path, '#\{(.+)\}#U');
+
 				if ($matches !== null) {
 					foreach ($matches as $item) {
 						$match = Regex::match($item[1], '#.*([^a-zA-Z0-9\-_]+).*#');
@@ -85,7 +86,7 @@ class GroupPathValidation implements IValidation
 						if ($match !== null) {
 							throw (new InvalidSchemaException(
 								sprintf(
-									'@Path "%s" in "%s" contains illegal characters "%s" in parameter. Allowed characters in parameter are only {[a-z-A-Z0-9-_]+}',
+									'#[Path] "%s" in "%s" contains illegal characters "%s" in parameter. Allowed characters in parameter are only {[a-z-A-Z0-9-_]+}',
 									$path,
 									$controller->getClass(),
 									$match[1]

@@ -24,7 +24,7 @@ class ControllerPathValidation implements IValidation
 
 			if ($path === '') {
 				throw new InvalidSchemaException(
-					sprintf('@Path in "%s" must be set.', $controller->getClass())
+					sprintf('#[Path] in "%s" must be set.', $controller->getClass())
 				);
 			}
 
@@ -33,16 +33,16 @@ class ControllerPathValidation implements IValidation
 			}
 
 			// MUST: Starts with slash (/)
-			if (substr($path, 0, 1) !== '/') {
+			if (!str_starts_with($path, '/')) {
 				throw new InvalidSchemaException(
-					sprintf('@Path "%s" in "%s" must starts with "/" (slash).', $path, $controller->getClass())
+					sprintf('#[Path] "%s" in "%s" must starts with "/" (slash).', $path, $controller->getClass())
 				);
 			}
 
 			// MUST NOT: Ends with slash (/)
-			if (substr($path, -1, 1) === '/') {
+			if (str_ends_with($path, '/')) {
 				throw new InvalidSchemaException(
-					sprintf('@Path "%s" in "%s" must not ends with "/" (slash).', $path, $controller->getClass())
+					sprintf('#[Path] "%s" in "%s" must not ends with "/" (slash).', $path, $controller->getClass())
 				);
 			}
 		}
@@ -65,7 +65,7 @@ class ControllerPathValidation implements IValidation
 			if ($match !== null) {
 				throw new InvalidSchemaException(
 					sprintf(
-						'@Path "%s" in "%s" contains illegal characters "%s". Allowed characters are only [a-zA-Z0-9-_/].',
+						'#[Path] "%s" in "%s" contains illegal characters "%s". Allowed characters are only [a-zA-Z0-9-_/].',
 						$path,
 						$controller->getClass(),
 						$match[1]

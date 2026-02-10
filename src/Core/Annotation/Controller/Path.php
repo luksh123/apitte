@@ -3,28 +3,19 @@
 namespace Apitte\Core\Annotation\Controller;
 
 use Attribute;
-use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
-use Doctrine\Common\Annotations\Annotation\Target;
-use Doctrine\Common\Annotations\AnnotationException;
+use InvalidArgumentException;
 
-/**
- * @Annotation
- * @Target({"CLASS","METHOD"})
- * @NamedArgumentConstructor()
- */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
 class Path
 {
 
-	private string $path;
-
-	public function __construct(string $path)
+	public function __construct(
+		private readonly string $path,
+	)
 	{
 		if ($path === '') {
-			throw new AnnotationException('Empty @Path given');
+			throw new InvalidArgumentException('Empty #[Path] given');
 		}
-
-		$this->path = $path;
 	}
 
 	public function getPath(): string

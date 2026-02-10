@@ -9,6 +9,11 @@ use Apitte\Core\Schema\Endpoint;
 use Nette\Utils\JsonException;
 use TypeError;
 
+/**
+ * @template TKey of string|int
+ * @template TValue of mixed
+ * @extends AbstractEntity<TKey, TValue>
+ */
 abstract class BasicEntity extends AbstractEntity
 {
 
@@ -23,11 +28,10 @@ abstract class BasicEntity extends AbstractEntity
 	}
 
 	/**
-	 * @return BasicEntity|null
+	 * @return BasicEntity<TKey, TValue>|null
 	 */
 	public function fromRequest(ApiRequest $request): ?IRequestEntity
 	{
-		
 		if (in_array($request->getMethod(), [Endpoint::METHOD_POST, Endpoint::METHOD_PUT, Endpoint::METHOD_PATCH], true)) {
 			return $this->fromBodyRequest($request);
 		}
@@ -40,30 +44,52 @@ abstract class BasicEntity extends AbstractEntity
 	}
 
 	/**
-	 * @param array<string, mixed> $data
-	 * @return static
+	 * @param array<TKey, TValue> $data
+	 * @return static<TKey, TValue>
 	 */
-	public function factory(array $data): self
+	public function factory(array $data): static
 	{
+		/** @var static<TKey, TValue> $inst */
 		$inst = new static();
 
 		// Fill properties with real data
 		$properties = $inst->getRequestProperties();
+
 		foreach ($properties as $property) {
-			if (!array_key_exists($property['name'], $data)) {
+			/** @var TKey $propName */
+			$propName = $property['name'];
+
+			if (!array_key_exists($propName, $data)) {
 				continue;
 			}
 
-			$value = $data[$property['name']];
+			$value = $data[$propName];
 
 			// Normalize & convert value (only not null values)
 			if ($value !== null) {
-				$value = $this->normalize($property['name'], $value);
+				$value = $this->normalize($propName, $value);
 			}
 
 			// Fill single property
 			try {
-				$inst->{$property['name']} = $value;
+				$propNameStr = (string) $propName;
+
+				if (property_exists($inst, $propNameStr)) {
+					$ref = new \ReflectionProperty($inst, $propNameStr);
+					$wasAccessible = $ref->isPublic();
+
+					if (!$wasAccessible) {
+						$ref->setAccessible(true);
+					}
+
+					$ref->setValue($inst, $value);
+
+					if (!$wasAccessible) {
+						$ref->setAccessible(false);
+					}
+				} elseif (method_exists($inst, '__set')) {
+					$inst->__set($propName, $value);
+				}
 			} catch (TypeError) {
 				// do nothing, entity will be invalid if something is missing and ValidationException will be thrown
 			}
@@ -72,47 +98,32 @@ abstract class BasicEntity extends AbstractEntity
 		return $inst;
 	}
 
-	protected function normalize(string $property, mixed $value): mixed
+	/**
+	 * @param TKey $property
+	 * @param TValue $value
+	 * @return TValue
+	 */
+	protected function normalize(int|string $property, mixed $value): mixed
 	{
 		return $value;
 	}
 
 	/**
-	 * @return static
+	 * @return static<TKey, TValue>
 	 */
 	protected function fromBodyRequest(ApiRequest $request): self
 	{
-		$endpoint = $request->getOriginalRequest()->getAttribute('apitte.core.endpoint');
-		$requestBody = $endpoint ? $endpoint->getRequestBody() : null;
-
-		$requestContentType = $request->getHeader('content-type');
-		$requestContentType = $requestContentType[0] ?? null;
-
-		if ($requestBody && $requestContentType && $requestBody->getContentType() !== $requestContentType)
-			throw new ClientErrorException('Different content type detected', 400);
-
-		$body = [];
-		
-		if ($requestContentType === 'application/x-www-form-urlencoded') {
-			$body = $request->getParsedBody();
-			$request->getBody()->rewind();
-
-		}
-
-		if ($requestContentType === 'application/json') {
-			try {
-				$body = (array) $request->getJsonBodyCopy(true);
-			} catch (JsonException $ex) {
-				throw new ClientErrorException('Invalid json data', 400, $ex);
-			}
+		try {
+			$body = (array) $request->getJsonBodyCopy(true);
+		} catch (JsonException $ex) {
+			throw new ClientErrorException('Invalid json data', 400, $ex);
 		}
 
 		return $this->factory($body);
-
 	}
 
 	/**
-	 * @return static
+	 * @return static<TKey, TValue>
 	 */
 	protected function fromGetRequest(ApiRequest $request): self
 	{

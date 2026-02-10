@@ -19,12 +19,13 @@ class PathValidation implements IValidation
 	protected function validateRequirements(SchemaBuilder $builder): void
 	{
 		$controllers = $builder->getControllers();
+
 		foreach ($controllers as $controller) {
 			foreach ($controller->getMethods() as $method) {
 				if ($method->getPath() === '') {
 					throw (new InvalidSchemaException(
 						sprintf(
-							'"%s::%s()" has empty @Path.',
+							'"%s::%s()" has empty #[Path].',
 							$controller->getClass(),
 							$method->getName()
 						)
@@ -45,10 +46,10 @@ class PathValidation implements IValidation
 				$path = $method->getPath();
 
 				// MUST: Starts with slash (/)
-				if (substr($path, 0, 1) !== '/') {
+				if (!str_starts_with($path, '/')) {
 					throw (new InvalidSchemaException(
 						sprintf(
-							'@Path "%s" in "%s::%s()" must starts with "/" (slash).',
+							'#[Path] "%s" in "%s::%s()" must starts with "/" (slash).',
 							$path,
 							$controller->getClass(),
 							$method->getName()
@@ -59,10 +60,10 @@ class PathValidation implements IValidation
 				}
 
 				// MUST NOT: Ends with slash (/), except single '/' path
-				if (substr($path, -1, 1) === '/' && strlen($path) > 1) {
+				if (str_ends_with($path, '/') && strlen($path) > 1) {
 					throw (new InvalidSchemaException(
 						sprintf(
-							'@Path "%s" in "%s::%s()" must not ends with "/" (slash).',
+							'#[Path] "%s" in "%s::%s()" must not ends with "/" (slash).',
 							$path,
 							$controller->getClass(),
 							$method->getName()
@@ -94,7 +95,7 @@ class PathValidation implements IValidation
 				if ($match !== null) {
 					throw (new InvalidSchemaException(
 						sprintf(
-							'@Path "%s" in "%s::%s()" contains illegal characters "%s". Allowed characters are only [a-zA-Z0-9-_/{}].',
+							'#[Path] "%s" in "%s::%s()" contains illegal characters "%s". Allowed characters are only [a-zA-Z0-9-_/{}].',
 							$path,
 							$controller->getClass(),
 							$method->getName(),
@@ -112,6 +113,7 @@ class PathValidation implements IValidation
 				// -> -_
 				// @regex https://regex101.com/r/APckUJ/3
 				$matches = Regex::matchAll($path, '#\{(.+)\}#U');
+
 				if ($matches !== null) {
 					foreach ($matches as $item) {
 						$match = Regex::match($item[1], '#.*([^a-zA-Z0-9\-_]+).*#');
@@ -119,7 +121,7 @@ class PathValidation implements IValidation
 						if ($match !== null) {
 							throw (new InvalidSchemaException(
 								sprintf(
-									'@Path "%s" in "%s::%s()" contains illegal characters "%s" in parameter. Allowed characters in parameter are only {[a-z-A-Z0-9-_]+}',
+									'#[Path] "%s" in "%s::%s()" contains illegal characters "%s" in parameter. Allowed characters in parameter are only {[a-z-A-Z0-9-_]+}',
 									$path,
 									$controller->getClass(),
 									$method->getName(),

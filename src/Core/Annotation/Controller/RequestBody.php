@@ -3,35 +3,18 @@
 namespace Apitte\Core\Annotation\Controller;
 
 use Attribute;
-use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
-use Doctrine\Common\Annotations\Annotation\Target;
 
-/**
- * @Annotation
- * @Target("METHOD")
- * @NamedArgumentConstructor()
- */
 #[Attribute(Attribute::TARGET_METHOD)]
 class RequestBody
 {
 
-	private ?string $description;
-
-	private ?string $entity;
-
-	private string $contentType;
-
-	private bool $required;
-
-	private bool $validation;
-
-	public function __construct(?string $description = null, ?string $entity = null, bool $required = false, bool $validation = true, string $contentType = 'application/json')
+	public function __construct(
+		private readonly ?string $description = null,
+		private readonly ?string $entity = null,
+		private readonly bool $required = false,
+		private readonly bool $validation = true,
+	)
 	{
-		$this->description = $description;
-		$this->entity = $entity;
-		$this->required = $required;
-		$this->validation = $validation;
-		$this->contentType = $contentType;
 	}
 
 	public function getEntity(): ?string

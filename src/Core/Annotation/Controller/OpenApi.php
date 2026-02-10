@@ -3,19 +3,12 @@
 namespace Apitte\Core\Annotation\Controller;
 
 use Attribute;
-use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
-use Doctrine\Common\Annotations\Annotation\Target;
 
-/**
- * @Annotation
- * @Target({"CLASS","METHOD"})
- * @NamedArgumentConstructor()
- */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
 class OpenApi
 {
 
-	private string $data;
+	private readonly string $data;
 
 	public function __construct(string $data)
 	{
