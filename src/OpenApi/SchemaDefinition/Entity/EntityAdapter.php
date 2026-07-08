@@ -108,16 +108,12 @@ class EntityAdapter implements IEntityAdapter
 		// Array shape
 		if (preg_match('~array<(\w+),\s?([\w\<\>\[\]\\\\]+)>~', $type, $m)) {
 			$metadata = $m[2];
-			\Tracy\Debugger::log('m2', 'schema');
-			\Tracy\Debugger::log($m[2], 'schema');
 			return [
 				'type' => 'object',
 				'additionalProperties' => $this->getMetadata($m[2]),
 			];
-		}
 
-		\Tracy\Debugger::log('type', 'schema');
-		\Tracy\Debugger::log($type, 'schema');
+		}
 
 		// Get schema for class
 		if (class_exists($type)) {
